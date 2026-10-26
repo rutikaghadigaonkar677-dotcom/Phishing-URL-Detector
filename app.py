@@ -1,4 +1,4 @@
-
+M
 import os
 import requests
 import socket
@@ -6,6 +6,7 @@ from flask import Flask, request, render_template
 from urllib.parse import urlparse
 
 app = Flask(__name__, template_folder=".", static_folder=".", static_url_path="/static")
+
 def check_with_safe_browsing(url):
     api_key = os.getenv("SAFE_BROWSING_API_KEY")
 
@@ -44,7 +45,10 @@ def check_with_safe_browsing(url):
         )
 
         if response.status_code != 200:
-            return None, f"API request failed ({response.status_code}): {response.text[:300]}"
+            return None, (
+                f"API request failed ({response.status_code}): "
+                f"{response.text[:300]}"
+            )
 
         data = response.json()
 
@@ -55,6 +59,7 @@ def check_with_safe_browsing(url):
 
     except requests.RequestException:
         return None, "Unable to connect to API"
+
 @app.route("/")
 def home():
     return render_template("index.html")
