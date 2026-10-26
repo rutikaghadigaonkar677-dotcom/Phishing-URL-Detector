@@ -35,7 +35,7 @@ def check_with_safe_browsing(url):
         }
     }
 
-        try:
+    try:
         response = requests.post(
             api_url,
             params={"key": api_key},
