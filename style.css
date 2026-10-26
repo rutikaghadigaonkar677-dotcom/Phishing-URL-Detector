@@ -643,7 +643,7 @@ body.home-page {
             rgba(2, 8, 23, 0.25),
             rgba(2, 8, 23, 0.45)
         ),
-        url("../home-bg.png");
+        url("/static/home-bg.png");
 
     background-size: cover;
     background-position: center top;
