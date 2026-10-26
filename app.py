@@ -5,7 +5,7 @@ import socket
 from flask import Flask, request, render_template
 from urllib.parse import urlparse
 
-app = Flask(__name__, template_folder="../", static_folder="../", static_url_path="/static")
+app = Flask(__name__, template_folder=".", static_folder=".", static_url_path="/static")
 def check_with_safe_browsing(url):
     api_key = os.getenv("SAFE_BROWSING_API_KEY")
 
