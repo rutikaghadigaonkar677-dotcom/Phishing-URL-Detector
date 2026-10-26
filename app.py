@@ -43,9 +43,8 @@ def check_with_safe_browsing(url):
             timeout=10
         )
 
-        if response.status_code != 200:
-            return None, "API request failed"
-
+       if response.status_code != 200:
+    return None, f"API request failed ({response.status_code}): {response.text[:300]}"
         data = response.json()
 
         if data.get("matches"):
@@ -77,7 +76,7 @@ def faq():
 @app.route("/contact.html")
 def contact():
     return render_template("contact.html")
-@app.route("/check", methods=["POST"])
+
 
 @app.route("/check", methods=["POST"])
 def check_url():
@@ -180,7 +179,7 @@ def contact_submit():
             
         </p>
         <a href="/contact.html">Back to Contact Us</a>
-    </div>
+    </div>M
     """
 
 
