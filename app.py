@@ -1,4 +1,4 @@
-
+ 
 import os
 import requests
 import socket
@@ -223,7 +223,7 @@ def contact_submit():
 
 if __name__ == "__main__":
     @app.route("/admin-messages")
-def admin_messages():
+    def admin_messages():
     auth = request.authorization
     admin_password = os.environ.get("ADMIN_PASSWORD")
 
