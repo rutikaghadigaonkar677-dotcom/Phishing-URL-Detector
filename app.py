@@ -2,32 +2,11 @@
 import os
 import requests
 import socket
-import psycopg
-from flask import Response
-from html import escape
 from flask import Flask, request, render_template
 from urllib.parse import urlparse
 
 app = Flask(__name__, template_folder=".", static_folder=".", static_url_path="/static")
-def init_db():
-    conn = psycopg.connect(os.environ["DATABASE_URL"])
-    cursor = conn.cursor()
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS messages (
-        id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
-        email TEXT NOT NULL,
-        message TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-""")
-
-    conn.commit()
-    conn.close()
-
-
-init_db()
 
 def check_with_safe_browsing(url):
     api_key = os.getenv("SAFE_BROWSING_API_KEY")
@@ -100,10 +79,6 @@ def safety():
 def faq():
     return render_template("faq.html")
 
-
-@app.route("/contact.html")
-def contact():
-    return render_template("contact.html")
 
 
 @app.route("/check", methods=["POST"])
@@ -187,103 +162,6 @@ def check_url():
     <p>Please try again later.</p>
     """
     
-
-@app.route("/contact", methods=["POST"])
-def contact_submit():
-    name = request.form.get("name", "").strip()
-    email = request.form.get("email", "").strip()
-    message = request.form.get("message", "").strip()
-
-    if not name or not email or not message:
-        return "<h2>Please fill in all fields.</h2>"
-    
-    try:
-        with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("""
-                    INSERT INTO messages (name, email, message)
-                    VALUES (%s, %s, %s)
-                """, (name, email, message))
-
-    except psycopg.Error:
-        app.logger.exception("Unable to save contact message")
-        return "<h2>Unable to save your message. Please try again.</h2>", 500
-    return f"""
-    <div style="font-family:Arial; max-width:500px; margin:40px auto;
-                padding:30px; text-align:center; background:#f0fdf4;
-                border:1px solid #bbf7d0; border-radius:16px;">
-        <div style="font-size:48px;">✅</div>
-        <h2 style="color:#15803d;">Message Submitted Successfully!</h2>
-        <p>Thank you! Your message has been received.</p>
-        <a href="/contact.html">Back to Contact Us</a>
-    </div>
-    """
-@app.route("/admin-messages")
-def admin_messages():
-    auth = request.authorization
-    admin_password = os.environ.get("ADMIN_PASSWORD")
-
-    if not admin_password:
-        return "Admin password is not configured.", 503
-
-    if (
-        not auth
-        or auth.username != "admin"
-        or auth.password != admin_password
-    ):
-        return Response(
-            "Login required",
-            401,
-            {"WWW-Authenticate": 'Basic realm="Admin Messages"'}
-        )
-
-    try:
-        with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("""
-                    SELECT id, name, email, message, created_at
-                    FROM messages
-                    ORDER BY created_at DESC
-                """)
-                rows = cursor.fetchall()
-
-        html = """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <title>Contact Messages</title>
-        </head>
-        <body>
-            <h1>Contact Us Messages</h1>
-        """
-
-        if not rows:
-            html += "<p>No messages found.</p>"
-
-        for row in rows:
-            html += f"""
-            <div>
-                <p><b>ID:</b> {escape(str(row[0]))}</p>
-                <p><b>Name:</b> {escape(str(row[1]))}</p>
-                <p><b>Email:</b> {escape(str(row[2]))}</p>
-                <p><b>Message:</b> {escape(str(row[3]))}</p>
-                <p><b>Date:</b> {escape(str(row[4]))}</p>
-                <hr>
-            </div>
-            """
-
-        html += "</body></html>"
-        return html
-
-    except psycopg.Error:
-        app.logger.exception("Unable to read contact messages")
-        return "Unable to load messages.", 500
-
-
-if __name__ == "__main__":
-    app.run(debug=True)
-
 
 if __name__ == "__main__":
     app.run(debug=True)
