@@ -7,6 +7,25 @@ from flask import Flask, request, render_template
 from urllib.parse import urlparse
 
 app = Flask(__name__, template_folder=".", static_folder=".", static_url_path="/static")
+def init_db():
+    conn = sqlite3.connect("contact_messages.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            message TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+init_db()
 
 def check_with_safe_browsing(url):
     api_key = os.getenv("SAFE_BROWSING_API_KEY")
