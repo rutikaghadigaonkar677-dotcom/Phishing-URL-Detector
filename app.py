@@ -218,12 +218,8 @@ def contact_submit():
         <a href="/contact.html">Back to Contact Us</a>
     </div>
     """
-
-
-
-if __name__ == "__main__":
-    @app.route("/admin-messages")
-    def admin_messages():
+@app.route("/admin-messages")
+def admin_messages():
     auth = request.authorization
     admin_password = os.environ.get("ADMIN_PASSWORD")
 
@@ -256,23 +252,7 @@ if __name__ == "__main__":
         <html>
         <head>
             <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1">
             <title>Contact Messages</title>
-            <style>
-                body {
-                    font-family: Arial, sans-serif;
-                    margin: 25px;
-                    background: #f4f6f9;
-                }
-                h1 { color: #17365d; }
-                .message {
-                    background: white;
-                    padding: 18px;
-                    margin-bottom: 15px;
-                    border-radius: 8px;
-                    overflow-wrap: anywhere;
-                }
-            </style>
         </head>
         <body>
             <h1>Contact Us Messages</h1>
@@ -283,12 +263,13 @@ if __name__ == "__main__":
 
         for row in rows:
             html += f"""
-            <div class="message">
+            <div>
                 <p><b>ID:</b> {escape(str(row[0]))}</p>
                 <p><b>Name:</b> {escape(str(row[1]))}</p>
                 <p><b>Email:</b> {escape(str(row[2]))}</p>
                 <p><b>Message:</b> {escape(str(row[3]))}</p>
                 <p><b>Date:</b> {escape(str(row[4]))}</p>
+                <hr>
             </div>
             """
 
@@ -298,5 +279,12 @@ if __name__ == "__main__":
     except psycopg.Error:
         app.logger.exception("Unable to read contact messages")
         return "Unable to load messages.", 500
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
+
+if __name__ == "__main__":
     app.run(debug=True)
       
