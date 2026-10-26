@@ -186,6 +186,7 @@ def check_url():
     """
     
 @app.route("/contact", methods=["POST"])
+@app.route("/contact", methods=["POST"])
 def contact_submit():
     name = request.form.get("name", "").strip()
     email = request.form.get("email", "").strip()
@@ -194,18 +195,30 @@ def contact_submit():
     if not name or not email or not message:
         return "<h2>Please fill in all fields.</h2>"
 
+    try:
+        conn = sqlite3.connect("contact_messages.db")
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            INSERT INTO messages (name, email, message)
+            VALUES (?, ?, ?)
+        """, (name, email, message))
+
+        conn.commit()
+        conn.close()
+
+    except sqlite3.Error:
+        return "<h2>Unable to save your message. Please try again.</h2>", 500
+
     return f"""
     <div style="font-family:Arial; max-width:500px; margin:40px auto;
                 padding:30px; text-align:center; background:#f0fdf4;
                 border:1px solid #bbf7d0; border-radius:16px;">
         <div style="font-size:48px;">✅</div>
         <h2 style="color:#15803d;">Message Submitted Successfully!</h2>
-        <p>Thank you, {name}! Your message has been received.</p>
-        <p style="color:#166534;">
-            
-        </p>
+        <p>Thank you! Your message has been received.</p>
         <a href="/contact.html">Back to Contact Us</a>
-    </div>M
+    </div>
     """
 
 
