@@ -8,18 +8,18 @@ from urllib.parse import urlparse
 
 app = Flask(__name__, template_folder=".", static_folder=".", static_url_path="/static")
 def init_db():
-    conn = sqlite3.connect("contact_messages.db")
+    conn = psycopg.connect(os.environ["DATABASE_URL"])
     cursor = conn.cursor()
 
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS messages (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            email TEXT NOT NULL,
-            message TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
+    CREATE TABLE IF NOT EXISTS messages (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        message TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+""")
 
     conn.commit()
     conn.close()
@@ -185,7 +185,7 @@ def check_url():
     <p>Please try again later.</p>
     """
     
-@app.route("/contact", methods=["POST"])
+
 @app.route("/contact", methods=["POST"])
 def contact_submit():
     name = request.form.get("name", "").strip()
@@ -194,22 +194,18 @@ def contact_submit():
 
     if not name or not email or not message:
         return "<h2>Please fill in all fields.</h2>"
-
+    
     try:
-        conn = sqlite3.connect("contact_messages.db")
-        cursor = conn.cursor()
+        with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO messages (name, email, message)
+                    VALUES (%s, %s, %s)
+                """, (name, email, message))
 
-        cursor.execute("""
-            INSERT INTO messages (name, email, message)
-            VALUES (?, ?, ?)
-        """, (name, email, message))
-
-        conn.commit()
-        conn.close()
-
-    except sqlite3.Error:
+    except psycopg.Error:
+        app.logger.exception("Unable to save contact message")
         return "<h2>Unable to save your message. Please try again.</h2>", 500
-
     return f"""
     <div style="font-family:Arial; max-width:500px; margin:40px auto;
                 padding:30px; text-align:center; background:#f0fdf4;
