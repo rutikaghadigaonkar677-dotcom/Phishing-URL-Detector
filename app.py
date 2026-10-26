@@ -3,6 +3,8 @@ import os
 import requests
 import socket
 import psycopg
+from flask import Response
+from html import escape
 from flask import Flask, request, render_template
 from urllib.parse import urlparse
 
@@ -220,5 +222,81 @@ def contact_submit():
 
 
 if __name__ == "__main__":
+    @app.route("/admin-messages")
+def admin_messages():
+    auth = request.authorization
+    admin_password = os.environ.get("ADMIN_PASSWORD")
+
+    if not admin_password:
+        return "Admin password is not configured.", 503
+
+    if (
+        not auth
+        or auth.username != "admin"
+        or auth.password != admin_password
+    ):
+        return Response(
+            "Login required",
+            401,
+            {"WWW-Authenticate": 'Basic realm="Admin Messages"'}
+        )
+
+    try:
+        with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT id, name, email, message, created_at
+                    FROM messages
+                    ORDER BY created_at DESC
+                """)
+                rows = cursor.fetchall()
+
+        html = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Contact Messages</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    margin: 25px;
+                    background: #f4f6f9;
+                }
+                h1 { color: #17365d; }
+                .message {
+                    background: white;
+                    padding: 18px;
+                    margin-bottom: 15px;
+                    border-radius: 8px;
+                    overflow-wrap: anywhere;
+                }
+            </style>
+        </head>
+        <body>
+            <h1>Contact Us Messages</h1>
+        """
+
+        if not rows:
+            html += "<p>No messages found.</p>"
+
+        for row in rows:
+            html += f"""
+            <div class="message">
+                <p><b>ID:</b> {escape(str(row[0]))}</p>
+                <p><b>Name:</b> {escape(str(row[1]))}</p>
+                <p><b>Email:</b> {escape(str(row[2]))}</p>
+                <p><b>Message:</b> {escape(str(row[3]))}</p>
+                <p><b>Date:</b> {escape(str(row[4]))}</p>
+            </div>
+            """
+
+        html += "</body></html>"
+        return html
+
+    except psycopg.Error:
+        app.logger.exception("Unable to read contact messages")
+        return "Unable to load messages.", 500
     app.run(debug=True)
       
