@@ -750,3 +750,30 @@ body {
     transform: translateY(-8px);
     box-shadow: 0 10px 25px rgba(0, 150, 255, 0.35);
 }
+
+/* Navigation hover effect */
+.menu a {
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+.menu a:hover {
+    color: #18d9ff;
+}
+
+/* Underline effect */
+.menu a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -6px;
+    width: 0;
+    height: 2px;
+    background-color: #18d9ff;
+    transition: width 0.3s ease;
+}
+
+.menu a:hover::after {
+    width: 100%;
+}
+
