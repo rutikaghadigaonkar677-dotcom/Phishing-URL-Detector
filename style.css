@@ -777,3 +777,20 @@ body {
     width: 100%;
 }
 
+/* Active tab - sky blue underline */
+.menu a {
+    text-decoration: none;
+    position: relative;
+}
+
+.menu a.active::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -8px;
+    width: 100%;
+    height: 2px;
+    background-color: skyblue;
+}
+
+
